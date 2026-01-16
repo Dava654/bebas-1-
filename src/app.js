@@ -1,16 +1,16 @@
 /**
- * Main Application - Task Management System (Day 2 + Day 4)
- * Orchestrates: Storage, Repositories, Controllers, Views, and Auth.
+ * Main Application - Task Management System
+ * Full Implementation: MVC, Auth, & UI Improvements
  */
 
-// 1. IMPORT SEMUA MODUL (Pastikan file-file ini ada di folder src/...)
+// 1. IMPORT SEMUA MODUL
+// Pastikan folder 'src' sudah kamu pindahkan ke dalam folder 'public'
 import { TaskController } from "./controllers/TaskController.js";
 import { TaskView } from "./views/TaskView.js";
 import { UserController } from "./controllers/UserController.js";
 import { UserRepository } from "./repositories/UserRepository.js";
 import { TaskRepository } from "./repositories/TaskRepository.js";
-// Pastikan nama file storage manager kamu sesuai (misal EnhancedStorageManager.js)
-// import { EnhancedStorageManager } from './storage/EnhancedStorageManager.js';
+import { EnhancedStorageManager } from "./storage/EnhancedStorageManager.js";
 
 // Global application state
 let app = {
@@ -30,21 +30,21 @@ function initializeApp() {
   console.log("🚀 Initializing Task Management System...");
 
   try {
-    // Inisialisasi storage manager (Gunakan class yang kamu punya)
-    // app.storage = new EnhancedStorageManager("taskAppDay2", "2.0");
+    // Initialize storage manager
+    app.storage = new EnhancedStorageManager("taskAppDay2", "2.0");
 
-    // Inisialisasi repositories
+    // Initialize repositories
     app.userRepository = new UserRepository(app.storage);
     app.taskRepository = new TaskRepository(app.storage);
 
-    // Inisialisasi controllers
+    // Initialize controllers
     app.userController = new UserController(app.userRepository);
     app.taskController = new TaskController(
       app.taskRepository,
       app.userRepository
     );
 
-    // Inisialisasi view
+    // Initialize view
     app.taskView = new TaskView(app.taskController, app.userController);
 
     // Setup UI & Auth
@@ -52,24 +52,25 @@ function initializeApp() {
     createDemoUserIfNeeded();
     showLoginSection();
 
-    console.log("✅ Application initialized successfully!");
+    console.log("✅ Day 2 & Day 4 Application initialized successfully!");
   } catch (error) {
     console.error("❌ Failed to initialize application:", error);
-    if (app.taskView)
-      app.taskView.showMessage("Gagal inisialisasi: " + error.message, "error");
+    showMessage("Gagal menginisialisasi aplikasi: " + error.message, "error");
   }
 }
 
 /**
- * Setup Event Listeners (Auth & UI Improvements Day 4)
+ * Setup Event Listeners
  */
 function setupAuthEventListeners() {
-  // Login & Register
+  // Auth Buttons
   document.getElementById("loginBtn")?.addEventListener("click", handleLogin);
   document
     .getElementById("registerBtn")
     ?.addEventListener("click", showRegisterModal);
   document.getElementById("logoutBtn")?.addEventListener("click", handleLogout);
+
+  // Form Events
   document
     .getElementById("usernameInput")
     ?.addEventListener("keypress", (e) => {
@@ -78,20 +79,29 @@ function setupAuthEventListeners() {
   document
     .getElementById("registerForm")
     ?.addEventListener("submit", handleRegister);
-
-  // Modal & Quick Actions
   document
     .getElementById("closeRegisterModal")
     ?.addEventListener("click", hideRegisterModal);
   document
     .getElementById("cancelRegister")
     ?.addEventListener("click", hideRegisterModal);
+
+  // Quick Actions
+  document.getElementById("showOverdueBtn")?.addEventListener("click", () => {
+    const res = app.taskController.getOverdueTasks();
+    showMessage(
+      res.count > 0
+        ? `Ada ${res.count} task overdue!`
+        : "Aman, tidak ada overdue",
+      "info"
+    );
+  });
   document
     .getElementById("refreshTasks")
     ?.addEventListener("click", () => app.taskView.refresh());
 
-  // --- DAY 4 UI IMPROVEMENTS ---
-  // Loading state untuk semua button
+  // --- UI IMPROVEMENTS (Day 4) ---
+  // Loading state buttons
   document.addEventListener("click", (e) => {
     if (e.target.matches(".btn") && !e.target.classList.contains("loading")) {
       e.target.classList.add("loading");
@@ -103,23 +113,19 @@ function setupAuthEventListeners() {
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
       e.preventDefault();
-      const target = document.querySelector(this.getAttribute("href"));
-      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.querySelector(this.getAttribute("href"))?.scrollIntoView({
+        behavior: "smooth",
+      });
     });
   });
 }
 
 /**
- * Logic Handlers (Login, Register, Logout)
+ * Auth Handlers
  */
 function handleLogin() {
-  const usernameInput = document.getElementById("usernameInput");
-  const username = usernameInput.value.trim();
-
-  if (!username) {
-    showMessage("Username wajib diisi", "error");
-    return;
-  }
+  const username = document.getElementById("usernameInput").value.trim();
+  if (!username) return showMessage("Username wajib diisi", "error");
 
   const response = app.userController.login(username);
   if (response.success) {
@@ -137,7 +143,7 @@ function handleLogout() {
   app.userController.logout();
   app.currentUser = null;
   showLoginSection();
-  showMessage("Berhasil logout", "info");
+  showMessage("Berhasil keluar", "info");
 }
 
 function handleRegister(event) {
@@ -173,10 +179,11 @@ function showMainContent() {
   document.getElementById("userInfo").style.display = "flex";
   document.getElementById("mainContent").style.display = "block";
   const welcome = document.getElementById("welcomeMessage");
-  if (welcome)
+  if (welcome && app.currentUser) {
     welcome.textContent = `Selamat datang, ${
       app.currentUser.fullName || app.currentUser.username
     }!`;
+  }
 }
 
 function showRegisterModal() {
@@ -202,10 +209,8 @@ function showMessage(message, type = "info") {
   else console.log(`${type.toUpperCase()}: ${message}`);
 }
 
-// Global Error Handling
+// Global Handlers
 window.addEventListener("error", (e) =>
-  showMessage("Terjadi kesalahan aplikasi", "error")
+  console.error("Global error:", e.error)
 );
-
-// Run
 document.addEventListener("DOMContentLoaded", initializeApp);
