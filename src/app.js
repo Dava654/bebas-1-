@@ -1,10 +1,9 @@
 /**
  * Main Application - Task Management System
- * Full Implementation: MVC, Auth, & UI Improvements
+ * Full MVC + UI Day 4 Implementation
  */
 
-// 1. IMPORT SEMUA MODUL
-// Pastikan folder 'src' sudah kamu pindahkan ke dalam folder 'public'
+// 1. IMPORT SEMUA KOMPONEN
 import { TaskController } from "./controllers/TaskController.js";
 import { TaskView } from "./views/TaskView.js";
 import { UserController } from "./controllers/UserController.js";
@@ -87,15 +86,9 @@ function setupAuthEventListeners() {
     ?.addEventListener("click", hideRegisterModal);
 
   // Quick Actions
-  document.getElementById("showOverdueBtn")?.addEventListener("click", () => {
-    const res = app.taskController.getOverdueTasks();
-    showMessage(
-      res.count > 0
-        ? `Ada ${res.count} task overdue!`
-        : "Aman, tidak ada overdue",
-      "info"
-    );
-  });
+  document
+    .getElementById("showOverdueBtn")
+    ?.addEventListener("click", showOverdueTasks);
   document
     .getElementById("refreshTasks")
     ?.addEventListener("click", () => app.taskView.refresh());
@@ -124,7 +117,8 @@ function setupAuthEventListeners() {
  * Auth Handlers
  */
 function handleLogin() {
-  const username = document.getElementById("usernameInput").value.trim();
+  const usernameInput = document.getElementById("usernameInput");
+  const username = usernameInput.value.trim();
   if (!username) return showMessage("Username wajib diisi", "error");
 
   const response = app.userController.login(username);
@@ -201,6 +195,18 @@ function createDemoUserIfNeeded() {
       email: "demo@example.com",
       fullName: "Demo User",
     });
+  }
+}
+
+function showOverdueTasks() {
+  const response = app.taskController.getOverdueTasks();
+  if (response.success) {
+    showMessage(
+      response.count > 0
+        ? `Ada ${response.count} task overdue!`
+        : "Aman, tidak ada overdue",
+      "warning"
+    );
   }
 }
 
